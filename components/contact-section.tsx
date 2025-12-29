@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useRef, useState } from "react"
 import { motion, useInView } from "framer-motion"
-import { Phone, Mail, Instagram, Linkedin, Twitter, Send } from "lucide-react"
+import { Phone, Mail, Instagram, Linkedin, Twitter, Send, Loader2, Check, AlertCircle } from "lucide-react"
 
 const teamLeads = [
   {
@@ -91,11 +91,76 @@ function ContactForm() {
     phone: "",
     message: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log(formData)
+    setIsSubmitting(true)
+    setSubmitStatus({ type: null, message: '' })
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/contact-section.tsx:97',message:'Contact form submission started',data:{hasName:!!formData.name,hasEmail:!!formData.email,hasMessage:!!formData.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/contact-section.tsx:111',message:'Contact API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
+      const data = await response.json()
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/contact-section.tsx:114',message:'Contact response data parsed',data:{hasError:!!data.error,hasSuccess:!!data.success,errorMessage:data.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (response.status === 400 && data.details) {
+          const errorMessages = data.details.map((err: { message: string }) => err.message).join(', ')
+          setSubmitStatus({ type: 'error', message: errorMessages })
+          setIsSubmitting(false)
+          return
+        }
+
+        // Generic error
+        setSubmitStatus({ 
+          type: 'error', 
+          message: data.error || 'Failed to send message. Please try again.' 
+        })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Success
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/contact-section.tsx:132',message:'Contact success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      setSubmitStatus({ type: 'success', message: 'Message sent successfully! We will get back to you soon.' })
+      // Reset form
+      setFormData({ name: "", email: "", phone: "", message: "" })
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus({ type: null, message: '' })
+      }, 5000)
+    } catch (error: any) {
+      console.error('Contact form error:', error)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/contact-section.tsx:142',message:'Contact exception',data:{errorMessage:error?.message,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      setSubmitStatus({ 
+        type: 'error', 
+        message: 'Network error. Please check your connection and try again.' 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -138,14 +203,44 @@ function ContactForm() {
           />
         </div>
 
+        {/* Status Message */}
+        {submitStatus.type && (
+          <div
+            className={`rounded-lg border p-3 text-sm ${
+              submitStatus.type === 'success'
+                ? 'border-green-500/50 bg-green-500/10 text-green-400'
+                : 'border-red-500/50 bg-red-500/10 text-red-400'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {submitStatus.type === 'success' ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <span>{submitStatus.message}</span>
+            </div>
+          </div>
+        )}
+
         <motion.button
           type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold py-3 font-display text-sm tracking-wider text-maroon-dark transition-all duration-300 hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+          disabled={isSubmitting}
+          whileHover={isSubmitting ? {} : { scale: 1.02 }}
+          whileTap={isSubmitting ? {} : { scale: 0.98 }}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold py-3 font-display text-sm tracking-wider text-maroon-dark transition-all duration-300 hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Send className="h-4 w-4" />
-          SEND MESSAGE
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              SENDING...
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              SEND MESSAGE
+            </>
+          )}
         </motion.button>
       </div>
     </motion.form>

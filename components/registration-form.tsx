@@ -78,10 +78,84 @@ export function RegistrationForm({ isOpen, onClose, eventName, entryFee }: Regis
     }
 
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
-    setShowSuccess(true)
+    setErrors({})
+
+    try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/registration-form.tsx:84',message:'Form submission started',data:{eventName,hasEmail:!!formData.email,hasTransactionId:!!formData.transactionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventName,
+          entryFee,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          college: formData.college,
+          year: formData.year,
+          branch: formData.branch,
+          transactionId: formData.transactionId,
+        }),
+      })
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/registration-form.tsx:103',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
+      const data = await response.json()
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/registration-form.tsx:106',message:'Response data parsed',data:{hasError:!!data.error,hasSuccess:!!data.success,errorMessage:data.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (response.status === 400 && data.details) {
+          const validationErrors: Record<string, string> = {}
+          data.details.forEach((err: { path: string[]; message: string }) => {
+            const field = err.path[0]
+            validationErrors[field] = err.message
+          })
+          setErrors(validationErrors)
+          setIsSubmitting(false)
+          return
+        }
+
+        // Handle duplicate registration
+        if (response.status === 409) {
+          setErrors({ 
+            email: data.error || 'You have already registered for this event with this email address' 
+          })
+          setIsSubmitting(false)
+          return
+        }
+
+        // Generic error
+        setErrors({ 
+          transactionId: data.error || 'Failed to submit registration. Please try again.' 
+        })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Success
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/registration-form.tsx:135',message:'Registration success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      setShowSuccess(true)
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d240b8c-3781-4b8a-a243-fe0587445adc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/registration-form.tsx:140',message:'Registration exception',data:{errorMessage:error?.message,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      setErrors({ 
+        transactionId: 'Network error. Please check your connection and try again.' 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const inputClasses =
