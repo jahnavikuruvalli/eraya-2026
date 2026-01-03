@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
-import { EventsSection } from "@/components/events-section"
+import { TimelineSection } from "@/components/timeline-section"
 import { WorkshopsSection } from "@/components/workshops-section"
 import { ExhibitionsSection } from "@/components/exhibitions-section"
 import { ProShowsSection } from "@/components/pro-shows-section"
@@ -14,7 +14,7 @@ export default function Home() {
     <main className="min-h-screen bg-maroon text-cream selection:bg-gold selection:text-maroon">
       <Navbar />
       <HeroSection />
-      <EventsSection />
+      <TimelineSection />
       <WorkshopsSection />
       <ExhibitionsSection />
       <ProShowsSection />
