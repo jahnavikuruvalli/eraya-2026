@@ -1,4 +1,4 @@
-"use client"
+/*"use client"
 
 export const dynamic = "force-dynamic"
 
@@ -219,7 +219,7 @@ function AuthPageContent() {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border-2 border-gold/40 bg-maroon-dark/95 p-8 shadow-xl"
         >
-          {/* Header */}
+          {/* Header *//*}
           <div className="mb-8 text-center">
             <h1 className="font-display text-3xl font-bold text-gold">
               {isSignIn ? "Sign In" : "Sign Up"}
@@ -227,7 +227,7 @@ function AuthPageContent() {
             <p className="mt-2 text-sm text-cream/60">ERAYA 2026</p>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs *//*}
           <div className="mb-6 flex gap-2 rounded-lg border border-gold/20 bg-maroon/50 p-1">
             <button
               onClick={() => {
@@ -261,7 +261,7 @@ function AuthPageContent() {
             </button>
           </div>
 
-          {/* Messages */}
+          {/* Messages *//*}
           <AnimatePresence>
             {error && (
               <motion.div
@@ -285,7 +285,7 @@ function AuthPageContent() {
             )}
           </AnimatePresence>
 
-          {/* Form */}
+          {/* Form *//*}
           <AnimatePresence mode="wait">
             {isSignIn ? (
               <motion.form
@@ -439,6 +439,12 @@ export default function AuthPage() {
       <AuthPageContent />
     </Suspense>
   )
+}
+*/
+
+export default function AuthPage() {
+  // Auth disabled for now
+  return null
 }
 
 

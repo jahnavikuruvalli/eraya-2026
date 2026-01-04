@@ -1,8 +1,12 @@
 import { cookies } from 'next/headers'
 import { createServerClient as createSsrClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
@@ -14,6 +18,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
  */
 export async function createServerClient() {
   const cookieStore = await cookies()
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Supabase environment variables are not set. Auth is currently disabled."
+    )
+  }
+  
 
   return createSsrClient(supabaseUrl, supabaseAnonKey, {
     cookies: {

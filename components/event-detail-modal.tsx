@@ -11,7 +11,7 @@ interface EventDetailProps {
   event: {
     name: string
     description: string
-    rules: string
+    rules: string[]
     date: string
     venue: string
     prizePool: string
