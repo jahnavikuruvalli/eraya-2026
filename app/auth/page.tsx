@@ -1,6 +1,8 @@
 "use client"
-
+import { Suspense } from "react"
 export const dynamic = "force-dynamic"
+
+
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -8,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Mail, Lock, User, LogIn, UserPlus, X } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isSignIn, setIsSignIn] = useState(true)
@@ -430,4 +432,13 @@ export default function AuthPage() {
     </div>
   )
 }
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <AuthPageContent />
+    </Suspense>
+  )
+}
+
 
